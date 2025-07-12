@@ -38,82 +38,135 @@ class YouTubeProcessor:
         
         return None
     
+    def get_all_available_transcripts(self, video_id: str) -> List[dict]:
+        """Get all available transcript languages and types"""
+        try:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            available_transcripts = []
+            
+            for transcript in transcript_list:
+                transcript_info = {
+                    'language': transcript.language,
+                    'language_code': transcript.language_code,
+                    'is_generated': transcript.is_generated,
+                    'is_translatable': transcript.is_translatable,
+                    'transcript_obj': transcript
+                }
+                available_transcripts.append(transcript_info)
+            
+            return available_transcripts
+        except Exception:
+            return []
+    
     def get_transcript(self, video_id: str, max_retries: int = 3) -> Tuple[Optional[str], Optional[dict]]:
-        """Get transcript with comprehensive error handling and retry logic"""
+        """Get transcript with comprehensive fallback methods"""
         
-        # Validate video ID first
         if not video_id or len(video_id) != 11:
             return None, {"error": "Invalid video ID format"}
         
-        for attempt in range(max_retries):
-            try:
-                # Add delay for retry attempts
-                if attempt > 0:
-                    time.sleep(random.uniform(1, 3))
-                
-                # Try to get available transcripts first
-                try:
-                    transcript_list_obj = YouTubeTranscriptApi.list_transcripts(video_id)
-                    
-                    # Try to find English transcripts
+        # Get all available transcripts
+        available_transcripts = self.get_all_available_transcripts(video_id)
+        
+        if not available_transcripts:
+            return None, {"error": "No transcripts available for this video"}
+        
+        # Priority order for transcript selection
+        language_priorities = [
+            'en', 'en-US', 'en-GB', 'en-CA', 'en-AU',  # English variants
+            'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh'  # Other major languages
+        ]
+        
+        # Try manual transcripts first (higher quality)
+        manual_transcripts = [t for t in available_transcripts if not t['is_generated']]
+        for lang_code in language_priorities:
+            for transcript_info in manual_transcripts:
+                if transcript_info['language_code'].startswith(lang_code):
                     try:
-                        transcript = transcript_list_obj.find_transcript(['en', 'en-US', 'en-GB'])
-                        transcript_data = transcript.fetch()
-                    except:
-                        # If no English transcript, try any available transcript
-                        available_transcripts = list(transcript_list_obj)
-                        if not available_transcripts:
-                            return None, {"error": "No transcripts available for this video"}
+                        transcript_data = transcript_info['transcript_obj'].fetch()
+                        transcript_text = " ".join([chunk["text"] for chunk in transcript_data])
                         
-                        transcript_data = available_transcripts[0].fetch()
-                
-                except:
-                    # Fallback to direct transcript fetch
-                    transcript_data = YouTubeTranscriptApi.get_transcript(
-                        video_id, 
-                        languages=["en", "en-US", "en-GB"]
-                    )
-                
-                # Create full transcript text
+                        metadata = {
+                            "video_id": video_id,
+                            "language": transcript_info['language'],
+                            "language_code": transcript_info['language_code'],
+                            "is_generated": False,
+                            "total_chunks": len(transcript_data),
+                            "total_length": len(transcript_text),
+                            "method": "manual_transcript"
+                        }
+                        
+                        return transcript_text, metadata
+                    except Exception:
+                        continue
+        
+        # Try auto-generated transcripts
+        auto_transcripts = [t for t in available_transcripts if t['is_generated']]
+        for lang_code in language_priorities:
+            for transcript_info in auto_transcripts:
+                if transcript_info['language_code'].startswith(lang_code):
+                    try:
+                        transcript_data = transcript_info['transcript_obj'].fetch()
+                        transcript_text = " ".join([chunk["text"] for chunk in transcript_data])
+                        
+                        metadata = {
+                            "video_id": video_id,
+                            "language": transcript_info['language'],
+                            "language_code": transcript_info['language_code'],
+                            "is_generated": True,
+                            "total_chunks": len(transcript_data),
+                            "total_length": len(transcript_text),
+                            "method": "auto_generated"
+                        }
+                        
+                        return transcript_text, metadata
+                    except Exception:
+                        continue
+        
+        # Try translation if available
+        for transcript_info in available_transcripts:
+            if transcript_info['is_translatable']:
+                try:
+                    # Try to translate to English
+                    translated = transcript_info['transcript_obj'].translate('en')
+                    transcript_data = translated.fetch()
+                    transcript_text = " ".join([chunk["text"] for chunk in transcript_data])
+                    
+                    metadata = {
+                        "video_id": video_id,
+                        "language": "English (Translated)",
+                        "language_code": "en",
+                        "is_generated": True,
+                        "original_language": transcript_info['language'],
+                        "total_chunks": len(transcript_data),
+                        "total_length": len(transcript_text),
+                        "method": "translated"
+                    }
+                    
+                    return transcript_text, metadata
+                except Exception:
+                    continue
+        
+        # Use any available transcript as last resort
+        for transcript_info in available_transcripts:
+            try:
+                transcript_data = transcript_info['transcript_obj'].fetch()
                 transcript_text = " ".join([chunk["text"] for chunk in transcript_data])
                 
-                if not transcript_text.strip():
-                    return None, {"error": "Empty transcript received"}
-                
-                # Create metadata
                 metadata = {
                     "video_id": video_id,
+                    "language": transcript_info['language'],
+                    "language_code": transcript_info['language_code'],
+                    "is_generated": transcript_info['is_generated'],
                     "total_chunks": len(transcript_data),
                     "total_length": len(transcript_text),
-                    "attempt": attempt + 1
+                    "method": "fallback"
                 }
                 
                 return transcript_text, metadata
-                
-            except TranscriptsDisabled:
-                return None, {"error": "Transcripts are disabled for this video"}
-            except NoTranscriptFound:
-                return None, {"error": "No transcript found for this video"}
-            except Exception as e:
-                error_msg = str(e).lower()
-                
-                # Handle specific error cases
-                if "no element found" in error_msg:
-                    if attempt < max_retries - 1:
-                        continue  # Retry for parsing errors
-                    return None, {"error": "Video transcript unavailable or restricted"}
-                elif "private" in error_msg or "unavailable" in error_msg:
-                    return None, {"error": "Video is private or unavailable"}
-                elif "rate limit" in error_msg:
-                    if attempt < max_retries - 1:
-                        time.sleep(5)  # Longer delay for rate limiting
-                        continue
-                    return None, {"error": "Rate limited by YouTube API"}
-                
-                if attempt == max_retries - 1:
-                    return None, {"error": f"Error fetching transcript: {str(e)}"}
+            except Exception:
+                continue
         
-        return None, {"error": "Failed to fetch transcript after all retry attempts"}
+        return None, {"error": "Failed to fetch any available transcript"}
     
     def process_transcript(self, transcript: str, video_id: str) -> List[Document]:
         """Split transcript into chunks and create documents"""

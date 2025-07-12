@@ -8,7 +8,6 @@ __version__ = "1.0.0"
 __author__ = "Adhiraj Singh"
 __description__ = "AI-Powered YouTube Video Assistant using RAG and Gemini AI"
 
-# Import main components for easy access
 from utils import YouTubeProcessor, GeminiHandler, VectorStoreManager
 from config import Config
 
