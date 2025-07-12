@@ -1,9 +1,7 @@
 import streamlit as st
 import os
+from utils import YouTubeProcessor, GeminiHandler, VectorStoreManager
 from config import Config
-from utils.youtube_processor import YouTubeProcessor
-from utils.gemini_handler import GeminiHandler
-from utils.vector_store import VectorStoreManager
 import time
 
 # Page configuration
