@@ -1,11 +1,8 @@
-# YouTubeProcessor.py
-
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 import re
-from typing import List, Optional, Tuple, Dict
-
+from typing import List, Optional, Tuple, Dict, Any
 
 class YouTubeProcessor:
     def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
@@ -15,79 +12,59 @@ class YouTubeProcessor:
         )
 
     def extract_video_id(self, url_or_id: str) -> Optional[str]:
-        """
-        Extract a YouTube video ID from a URL or validate a direct ID.
-        Returns the 11‑char ID or None if invalid.
-        """
-        url_or_id = url_or_id.strip()
-        # Direct ID
-        if len(url_or_id) == 11 and re.match(r'^[0-9A-Za-z_-]{11}$', url_or_id):
-            return url_or_id
-
-        # URL patterns
-        patterns = [
-            r"(?:v=|\/)([0-9A-Za-z_-]{11})",
-            r"(?:embed\/)([0-9A-Za-z_-]{11})",
-            r"(?:watch\?v=)([0-9A-Za-z_-]{11})",
-            r"(?:youtu\.be\/)([0-9A-Za-z_-]{11})",
-            r"(?:youtube\.com\/shorts\/)([0-9A-Za-z_-]{11})"
-        ]
-        for pattern in patterns:
-            m = re.search(pattern, url_or_id)
-            if m:
-                vid = m.group(1)
-                if re.match(r'^[0-9A-Za-z_-]{11}$', vid):
-                    return vid
+        input_text = url_or_id.strip()
+        if len(input_text) == 11 and re.match(r'^[0-9A-Za-z_-]{11}$', input_text):
+            return input_text
         return None
 
-    def get_transcript(self, video_id: str) -> Tuple[Optional[str], Optional[dict]]:
-        """
-        Fetch the full transcript text for a given video ID.
-        Returns (transcript_text, metadata) or (None, error_dict).
-        """
+    def get_transcript_data(self, video_id: str) -> Tuple[Optional[list], Optional[dict]]:
         if not video_id or len(video_id) != 11:
-            return None, {"error": "Invalid video ID format"}
-
+            return None, {"error": "Invalid video ID format."}
         try:
-            segments = YouTubeTranscriptApi.get_transcript(video_id)
-            # Join only non-empty text segments
-            transcript_text = " ".join(seg["text"].strip() for seg in segments if seg["text"].strip())
-
+            transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
+            if not transcript_data:
+                return None, {"error": "No transcript data received"}
             metadata = {
                 "video_id": video_id,
-                "total_segments": len(segments),
-                "total_length": len(transcript_text),
-                "method": "get_transcript"
+                "total_segments": len(transcript_data),
+                "duration": max([seg.get('start', 0) + seg.get('duration', 0) for seg in transcript_data]) if transcript_data else 0,
+                "method": "direct_api_call"
             }
-            return transcript_text, metadata
-
+            return transcript_data, metadata
         except TranscriptsDisabled:
             return None, {"error": "Transcripts are disabled for this video"}
         except NoTranscriptFound:
             return None, {"error": "No transcript found for this video"}
         except Exception as e:
-            return None, {"error": f"Unexpected error: {str(e)}"}
+            return None, {"error": f"Error fetching transcript: {e}"}
+
+    def process_transcript_data(self, transcript_data: List[Dict[str, Any]]) -> str:
+        if not transcript_data:
+            return ""
+        sorted_transcript = sorted(transcript_data, key=lambda x: x.get('start', 0))
+        transcript_text = " ".join([
+            chunk.get("text", "").strip()
+            for chunk in sorted_transcript
+            if chunk.get("text", "").strip()
+        ])
+        return transcript_text
 
     def process_transcript(self, transcript: str, video_id: str) -> List[Document]:
-        """
-        Split a raw transcript string into LangChain Document chunks.
-        """
         if not transcript or not transcript.strip():
             return []
-
-        # Normalize whitespace
-        cleaned = re.sub(r'\s+', ' ', transcript.strip())
-        chunks = self.splitter.split_text(cleaned)
-
+        cleaned_transcript = re.sub(r'\s+', ' ', transcript.strip())
+        chunks = self.splitter.split_text(cleaned_transcript)
         documents = []
-        for idx, chunk in enumerate(chunks):
+        for i, chunk in enumerate(chunks):
             if chunk.strip():
-                documents.append(Document(
+                doc = Document(
                     page_content=chunk.strip(),
                     metadata={
                         "video_id": video_id,
-                        "chunk_id": idx,
-                        "source": f"YouTube Video {video_id}"
+                        "chunk_id": i,
+                        "source": f"YouTube Video {video_id}",
+                        "chunk_length": len(chunk)
                     }
-                ))
+                )
+                documents.append(doc)
         return documents
