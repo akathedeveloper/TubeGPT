@@ -40,6 +40,7 @@ class GeminiHandler:
             - If the context doesn't contain relevant information, politely say you don't know
             - Provide specific details when available
             - Keep responses concise but informative
+            - If you can reference specific parts of the video, do so
             
             Answer:
             """

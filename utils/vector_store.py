@@ -11,6 +11,10 @@ class VectorStoreManager:
     def create_vector_store(self, documents: List[Document]) -> bool:
         """Create FAISS vector store from documents"""
         try:
+            if not documents:
+                st.error("No documents provided for vector store creation")
+                return False
+            
             self.vector_store = FAISS.from_documents(documents, self.embeddings)
             return True
         except Exception as e:

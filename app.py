@@ -31,6 +31,8 @@ def initialize_session_state():
         st.session_state.video_processed = False
     if "current_video_id" not in st.session_state:
         st.session_state.current_video_id = None
+    if "video_metadata" not in st.session_state:
+        st.session_state.video_metadata = {}
 
 # Main header
 def render_header():
@@ -46,32 +48,61 @@ def render_sidebar():
     with st.sidebar:
         st.markdown("### 🚀 How to Use TubeGPT")
         st.markdown("""
-        1. **Enter YouTube URL** in the input field
+        1. **Enter YouTube Video ID** (11 characters)
         2. **Click Process Video** to analyze the transcript
         3. **Ask questions** about the video content
         4. **Get AI-powered answers** based on the transcript
         """)
         
         st.markdown("---")
-        st.markdown("### 📊 Video Statistics")
-        if st.session_state.video_processed and hasattr(st.session_state, 'video_metadata'):
+        st.markdown("### 📊 Current Video")
+        if st.session_state.video_processed and st.session_state.video_metadata:
             metadata = st.session_state.video_metadata
-            st.metric("Video ID", st.session_state.current_video_id)
-            st.metric("Total Chunks", metadata.get('total_chunks', 'N/A'))
+            video_id = st.session_state.current_video_id
+            
+            # Display video info
+            st.metric("Video ID", video_id)
             st.metric("Transcript Length", f"{metadata.get('total_length', 0):,} chars")
-            st.metric("Language", metadata.get('language', 'Unknown'))
-            st.metric("Method", metadata.get('method', 'Unknown'))
+            st.metric("Total Segments", metadata.get('total_segments', 'N/A'))
+            st.metric("Duration", f"{metadata.get('duration', 0):.1f}s")
+            
+            # YouTube link
+            youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+            st.markdown(f"[🔗 Watch on YouTube]({youtube_url})")
+            
+            # Copy video ID
+            st.code(video_id, language=None)
         else:
-            st.info("Process a video to see statistics")
+            st.info("No video processed yet")
         
         st.markdown("---")
         st.markdown("### ⚙️ Settings")
+        chunk_type = st.selectbox(
+            "Chunking Method",
+            ["Text-based", "Time-based"],
+            help="Choose how to split the transcript"
+        )
+        
+        if chunk_type == "Time-based":
+            chunk_duration = st.slider("Chunk Duration (seconds)", 30, 180, 60)
+        
         temperature = st.slider("Response Creativity", 0.0, 1.0, 0.7, 0.1)
         max_results = st.slider("Search Results", 1, 10, 4)
         
         if st.button("🗑️ Clear Chat History"):
             st.session_state.messages = []
             st.rerun()
+        
+        st.markdown("---")
+        st.markdown("### 💡 Sample Video IDs")
+        st.markdown("""
+        - `bMt47wvK6u0` (Your working example)
+        - `dQw4w9WgXcQ` (Rick Roll)
+        - `9bZkp7q19f0` (Gangnam Style)
+        """)
+        
+        if st.button("🚀 Test with Sample"):
+            process_video_input("bMt47wvK6u0")
 
 # Video processing section
 def render_video_processor():
@@ -80,88 +111,113 @@ def render_video_processor():
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        video_url = st.text_input(
-            "Enter YouTube Video URL:",
-            placeholder="https://www.youtube.com/watch?v=...",
-            help="Paste any YouTube video URL here - the system will automatically find the best available transcript"
+        video_input = st.text_input(
+            "Enter YouTube Video ID:",
+            placeholder="bMt47wvK6u0",
+            help="Enter the 11-character YouTube video ID (e.g., bMt47wvK6u0)"
         )
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
+        st.markdown("<br>", unsafe_allow_html=True)
         process_button = st.button("🔄 Process Video", type="primary")
     
-    if process_button and video_url:
-        process_video(video_url)
+    # Processing options
+    with st.expander("⚙️ Processing Options"):
+        col1, col2 = st.columns(2)
+        with col1:
+            chunk_method = st.radio(
+                "Chunking Method:",
+                ["Text-based chunks", "Time-based chunks"],
+                help="Choose how to split the transcript for processing"
+            )
+        with col2:
+            if chunk_method == "Time-based chunks":
+                time_chunk_duration = st.slider("Time chunk duration (seconds)", 30, 180, 60)
+            else:
+                time_chunk_duration = 60
+    
+    if process_button and video_input:
+        chunk_type = "time" if chunk_method == "Time-based chunks" else "text"
+        process_video_input(video_input, chunk_type, time_chunk_duration)
+    
+    # Examples section
+    st.markdown("### 💡 How to Find Video ID")
+    st.info("""
+    **From YouTube URL:** `https://www.youtube.com/watch?v=bMt47wvK6u0`
+    
+    The Video ID is: `bMt47wvK6u0` (the part after `v=`)
+    """)
 
-def process_video(video_url):
-    """Enhanced video processing with automatic fallbacks"""
+def process_video_input(video_input, chunk_type="text", chunk_duration=60):
+    """Process video input and create vector store"""
     
     # Initialize processors
     youtube_processor = YouTubeProcessor(Config.CHUNK_SIZE, Config.CHUNK_OVERLAP)
     gemini_handler = GeminiHandler(Config.GOOGLE_API_KEY, Config.GEMINI_MODEL)
     
-    # Extract video ID
-    video_id = youtube_processor.extract_video_id(video_url)
+    # Extract or validate video ID
+    video_id = youtube_processor.extract_video_id(video_input)
     
     if not video_id:
-        st.error("❌ Invalid YouTube URL. Please check the URL and try again.")
+        st.error("❌ Invalid input. Please enter a valid 11-character YouTube video ID.")
+        st.info("Example: `bMt47wvK6u0`")
         return
+    
+    # Show the video ID being processed
+    st.markdown(f"""
+    <div class="video-id-display">
+        🎯 Processing Video ID: <strong>{video_id}</strong>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Progress tracking
     progress_bar = st.progress(0)
     status_text = st.empty()
     
     try:
-        # Step 1: Analyze available transcripts
-        status_text.text("🔍 Analyzing available transcripts...")
+        # Step 1: Get transcript
+        status_text.text("📥 Fetching video transcript...")
         progress_bar.progress(20)
         
-        available_transcripts = youtube_processor.get_all_available_transcripts(video_id)
+        if chunk_type == "time":
+            # Get timestamped data for time-based chunking
+            transcript_data, metadata = youtube_processor.get_transcript_with_timestamps(video_id)
+            if not transcript_data:
+                st.error(f"❌ {metadata.get('error', 'Failed to fetch timestamped transcript')}")
+                return
+            
+            # Also get text for display
+            transcript_text = youtube_processor.process_transcript_data(transcript_data)
+        else:
+            # Get regular transcript
+            transcript_text, metadata = youtube_processor.get_transcript(video_id)
+            if not transcript_text:
+                st.error(f"❌ {metadata.get('error', 'Failed to fetch transcript')}")
+                return
+            transcript_data = None
         
-        if not available_transcripts:
-            st.error("❌ No transcripts available for this video. The video may be private, restricted, or have no captions.")
-            return
-        
-        # Display available transcript info
-        st.info(f"📋 Found {len(available_transcripts)} transcript(s) available")
-        
-        # Step 2: Get best available transcript
-        status_text.text("📥 Fetching optimal transcript...")
-        progress_bar.progress(40)
-        
-        transcript, metadata = youtube_processor.get_transcript(video_id)
-        
-        if not transcript:
-            st.error(f"❌ Failed to fetch transcript: {metadata.get('error', 'Unknown error')}")
-            return
-        
-        # Display transcript info
-        lang_info = f"{metadata.get('language', 'Unknown')} ({metadata.get('language_code', 'N/A')})"
-        method_info = metadata.get('method', 'unknown')
-        is_generated = metadata.get('is_generated', False)
-        
-        st.success(f"✅ Successfully fetched transcript in {lang_info}")
-        st.info(f"📊 Method: {method_info} | Generated: {'Yes' if is_generated else 'No'} | Length: {len(transcript):,} chars")
-        
-        # Step 3: Process transcript
+        # Step 2: Process transcript
         status_text.text("✂️ Processing transcript into chunks...")
-        progress_bar.progress(60)
+        progress_bar.progress(50)
         
-        documents = youtube_processor.process_transcript(transcript, video_id)
+        if chunk_type == "time" and transcript_data:
+            documents = youtube_processor.create_timestamped_chunks(transcript_data, video_id, chunk_duration)
+        else:
+            documents = youtube_processor.process_transcript(transcript_text, video_id)
         
         if not documents:
             st.error("❌ Failed to process transcript into chunks.")
             return
         
-        # Step 4: Create vector store
+        # Step 3: Create vector store
         status_text.text("🔍 Creating searchable index...")
-        progress_bar.progress(80)
+        progress_bar.progress(75)
         
         embeddings = gemini_handler.get_embeddings()
         vector_manager = VectorStoreManager(embeddings)
         
         if vector_manager.create_vector_store(documents):
-            # Step 5: Complete
+            # Step 4: Complete
             status_text.text("✅ Video processed successfully!")
             progress_bar.progress(100)
             
@@ -172,18 +228,31 @@ def process_video(video_url):
             st.session_state.current_video_id = video_id
             st.session_state.video_metadata = metadata
             
-            # Show success message with details
-            st.success(f"🎉 Video processed successfully! Created {len(documents)} searchable chunks.")
+            # Show success message
+            st.success(f"🎉 Video processed successfully! Created {len(documents)} searchable chunks using {chunk_type}-based chunking.")
             
             # Display processing details
-            with st.expander("📊 Processing Details"):
-                col1, col2 = st.columns(2)
+            with st.expander("📊 Processing Details", expanded=True):
+                col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Language", metadata.get('language', 'Unknown'))
+                    st.metric("Video ID", video_id)
                     st.metric("Method", metadata.get('method', 'Unknown'))
                 with col2:
+                    st.metric("Transcript Length", f"{metadata.get('total_length', 0):,} chars")
                     st.metric("Chunks Created", len(documents))
-                    st.metric("Generated", "Yes" if metadata.get('is_generated') else "No")
+                with col3:
+                    st.metric("Total Segments", metadata.get('total_segments', 'N/A'))
+                    if metadata.get('duration'):
+                        st.metric("Duration", f"{metadata.get('duration', 0):.1f}s")
+                
+                # Show YouTube link
+                youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+                st.markdown(f"**YouTube Link:** [Watch Video]({youtube_url})")
+                
+                # Show sample transcript
+                if transcript_text:
+                    st.markdown("**Sample Transcript:**")
+                    st.text(transcript_text[:500] + "..." if len(transcript_text) > 500 else transcript_text)
             
         else:
             st.error("❌ Failed to create searchable index. Please try again.")
@@ -202,6 +271,10 @@ def render_chat_interface():
     if not st.session_state.video_processed:
         st.info("👆 Please process a YouTube video first to start chatting!")
         return
+    
+    # Display current video info
+    if st.session_state.current_video_id:
+        st.markdown(f"**Currently chatting about:** `{st.session_state.current_video_id}`")
     
     # Display chat messages
     for message in st.session_state.messages:
