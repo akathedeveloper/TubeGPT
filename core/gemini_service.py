@@ -3,6 +3,8 @@ import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import re
 import json
+import time
+import random
 from typing import List, Tuple
 
 class GeminiTubeGPT:
@@ -12,6 +14,7 @@ class GeminiTubeGPT:
         self.model = None
         self.chunks = []
         self.video_title = None
+        self.last_request_time = 0  # For rate limiting
         
     def setup_gemini(self, api_key: str) -> bool:
         """Setup Gemini API"""
@@ -47,15 +50,51 @@ class GeminiTubeGPT:
         return None
     
     def get_transcript(self, video_id: str) -> Tuple[str, bool]:
-        """Get transcript from YouTube video"""
+        """Enhanced transcript fetching with rate limiting and fallbacks"""
         try:
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
-            transcript = " ".join(chunk["text"] for chunk in transcript_list)
-            return transcript, True
-        except TranscriptsDisabled:
-            return "No captions available for this video.", False
+            # Add rate limiting to prevent IP blocking
+            current_time = time.time()
+            time_since_last = current_time - self.last_request_time
+            if time_since_last < 3:  # Wait at least 3 seconds between requests
+                wait_time = 3 + random.uniform(1, 2)  # Random delay 4-5 seconds
+                time.sleep(wait_time)
+            
+            self.last_request_time = time.time()
+            
+            # Try multiple language options and methods
+            language_options = [
+                ["en"],           # English only
+                ["en-US"],        # US English
+                ["en-GB"],        # UK English
+                ["en", "en-US"],  # Multiple English variants
+            ]
+            
+            for languages in language_options:
+                try:
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
+                    transcript = " ".join(chunk["text"] for chunk in transcript_list)
+                    if transcript.strip():  # Ensure we got actual content
+                        return transcript, True
+                except TranscriptsDisabled:
+                    continue
+                except Exception:
+                    continue
+            
+            # Final attempt without language specification (auto-detect)
+            try:
+                transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+                transcript = " ".join(chunk["text"] for chunk in transcript_list)
+                return transcript, True
+            except TranscriptsDisabled:
+                return "No captions available for this video. Please try a video with captions enabled.", False
+            except Exception as e:
+                error_msg = str(e)
+                if "blocked" in error_msg.lower() or "ip" in error_msg.lower():
+                    return "YouTube is temporarily blocking requests. Please wait 10-15 minutes and try again, or try a different video.", False
+                return f"Error fetching transcript: {error_msg}", False
+                
         except Exception as e:
-            return f"Error fetching transcript: {str(e)}", False
+            return f"Unexpected error: {str(e)}", False
     
     def chunk_transcript(self, transcript: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
         """Split transcript into chunks for better processing"""
@@ -66,6 +105,7 @@ class GeminiTubeGPT:
             end = start + chunk_size
             
             if end < len(transcript):
+                # Try to break at sentence boundaries
                 for i in range(end, max(start + chunk_size - 200, start), -1):
                     if transcript[i] in '.!?':
                         end = i + 1
@@ -85,6 +125,9 @@ class GeminiTubeGPT:
             return []
         
         try:
+            # Limit chunks to prevent token overflow
+            chunks_to_analyze = chunks[:8]  # Reduced from 10 to 8
+            
             relevance_prompt = f"""
             Given this question: "{question}"
             
@@ -92,21 +135,29 @@ class GeminiTubeGPT:
             Return only a JSON array of scores, one for each chunk.
             
             Chunks:
-            {json.dumps(chunks[:10])}
+            {json.dumps(chunks_to_analyze)}
             """
             
             response = self.model.generate_content(relevance_prompt)
             
             try:
-                scores = json.loads(response.text)
-                if isinstance(scores, list) and len(scores) == len(chunks[:10]):
-                    chunk_scores = list(zip(chunks[:10], scores))
+                # Clean response text (remove markdown formatting if present)
+                response_text = response.text.strip()
+                if response_text.startswith("```
+                    response_text = response_text.split("```")[1]
+                if response_text.startswith("json"):
+                    response_text = response_text[4:]
+                
+                scores = json.loads(response_text)
+                if isinstance(scores, list) and len(scores) == len(chunks_to_analyze):
+                    chunk_scores = list(zip(chunks_to_analyze, scores))
                     chunk_scores.sort(key=lambda x: x[1], reverse=True)
                     return [chunk for chunk, score in chunk_scores[:max_chunks]]
-            except:
+            except json.JSONDecodeError:
+                # Fallback: return first chunks if JSON parsing fails
                 pass
             
-            return chunks[:max_chunks]
+            return chunks_to_analyze[:max_chunks]
             
         except Exception as e:
             st.error(f"Error finding relevant chunks: {str(e)}")
@@ -147,7 +198,8 @@ class GeminiTubeGPT:
             return "Please load a video first."
         
         try:
-            summary_context = "\n\n".join(self.chunks[:6])
+            # Use more chunks for better summary
+            summary_context = "\n\n".join(self.chunks[:8])
             
             prompt = f"""
             Create a comprehensive summary of this YouTube video based on the transcript below.
