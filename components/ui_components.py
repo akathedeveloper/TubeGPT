@@ -154,7 +154,7 @@ class UIComponents:
         
         with col2:
             st.markdown("### 🔗 Links")
-            st.write("• [GitHub](https://github.com/adhirajsingh/tubegpt)")
+            st.write("• [GitHub](https://github.com/akathedeveloper/tubegpt)")
             st.write("• [Documentation](#)")
             st.write("• [Support](#)")
         

@@ -31,8 +31,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
     menu_items={
-        'Get Help': 'https://github.com/adhirajsingh/tubegpt',
-        'Report a bug': "https://github.com/adhirajsingh/tubegpt/issues",
+        'Get Help': 'https://github.com/akathedeveloper/tubegpt',
+        'Report a bug': "https://github.com/akathedeveloper/tubegpt/issues",
         'About': "# TubeGPT\nAI-Powered YouTube Video Q&A Assistant by Adhiraj Singh"
     }
 )

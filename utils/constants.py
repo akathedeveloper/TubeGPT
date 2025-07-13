@@ -3,7 +3,7 @@ APP_CONFIG = {
     'version': '2.0.0',
     'description': 'AI-Powered YouTube Video Q&A Assistant',
     'author': 'Adhiraj Singh',
-    'github': 'https://github.com/adhirajsingh/tubegpt'
+    'github': 'https://github.com/akathedeveloper/tubegpt'
 }
 
 QUICK_QUESTIONS = [
