@@ -2,6 +2,9 @@
 
 Transform any YouTube video into an interactive knowledge base with the power of Google Gemini AI.
 
+<img width="2938" height="1488" alt="image" src="https://github.com/user-attachments/assets/02b8595d-74e3-46f7-8a5f-38ad1065e531" />
+
+
 
 
 ## ✨ Features
@@ -24,6 +27,8 @@ pip install -r requirements.txt
 - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 - Create a free Gemini API key
 
+<img width="2928" height="1246" alt="image" src="https://github.com/user-attachments/assets/e51ead6c-ee31-4c1d-b269-c7e77f016947" />
+
 
 
 3. **Run Application**
@@ -34,7 +39,13 @@ streamlit run app.py
 4. **Start Chatting**
 - Enter your API key
 - Load any YouTube video
+  <img width="2940" height="1658" alt="image" src="https://github.com/user-attachments/assets/cf6735c2-c062-4a21-b6a7-4f0f6f231251" />
+
 - Ask questions about the content!
+  <img width="2936" height="1052" alt="image" src="https://github.com/user-attachments/assets/0a1caa60-847d-4ace-b82f-3e63f9f51e33" />
+  <img width="2940" height="1164" alt="image" src="https://github.com/user-attachments/assets/8f9f5ac8-9226-433e-ad0a-f8043ef589b0" />
+
+
 
 ## 📋 Requirements
 
