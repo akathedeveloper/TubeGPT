@@ -143,15 +143,15 @@ class GeminiTubeGPT:
             try:
                 # Clean response text (remove markdown formatting if present)
                 response_text = response.text.strip()
-                if response_text.startswith("```
-                    response_text = response_text.split("```")[1]
+                if response_text.startswith("```"):
+                    response_text = response_text.split("```")
                 if response_text.startswith("json"):
                     response_text = response_text[4:]
                 
                 scores = json.loads(response_text)
                 if isinstance(scores, list) and len(scores) == len(chunks_to_analyze):
                     chunk_scores = list(zip(chunks_to_analyze, scores))
-                    chunk_scores.sort(key=lambda x: x[1], reverse=True)
+                    chunk_scores.sort(key=lambda x: x, reverse=True)
                     return [chunk for chunk, score in chunk_scores[:max_chunks]]
             except json.JSONDecodeError:
                 # Fallback: return first chunks if JSON parsing fails
