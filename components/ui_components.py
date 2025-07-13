@@ -10,6 +10,20 @@ class UIComponents:
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display: none;}
+             /* Full width layout - REMOVE LEFT/RIGHT MARGINS */
+        .main .block-container {
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+            padding-top: 1rem !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        
+        .css-18e3th9, .css-1d391kg {
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+            max-width: 100% !important;
+        }
             
             /* Light theme styling */
             .stApp {
