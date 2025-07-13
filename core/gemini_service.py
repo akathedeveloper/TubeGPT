@@ -1,11 +1,14 @@
 import streamlit as st
 import google.generativeai as genai
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
+import yt_dlp
+import tempfile
+import os
 import re
 import json
 import time
 import random
 from typing import List, Tuple
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 
 class GeminiTubeGPT:
     def __init__(self):
@@ -14,7 +17,7 @@ class GeminiTubeGPT:
         self.model = None
         self.chunks = []
         self.video_title = None
-        self.last_request_time = 0  # For rate limiting
+        self.last_request_time = 0
         
     def setup_gemini(self, api_key: str) -> bool:
         """Setup Gemini API"""
@@ -50,51 +53,171 @@ class GeminiTubeGPT:
         return None
     
     def get_transcript(self, video_id: str) -> Tuple[str, bool]:
-        """Enhanced transcript fetching with rate limiting and fallbacks"""
+        """Enhanced transcript fetching with multiple reliable methods"""
+        
+        # Method 1: Try yt-dlp first (most reliable against blocking)
+        transcript, success = self._get_transcript_ytdlp(video_id)
+        if success and transcript.strip():
+            return transcript, True
+        
+        # Method 2: Try original API with enhanced rate limiting
+        transcript, success = self._get_transcript_original_enhanced(video_id)
+        if success and transcript.strip():
+            return transcript, True
+        
+        # Method 3: Try alternative yt-dlp configuration
+        transcript, success = self._get_transcript_ytdlp_alternative(video_id)
+        if success and transcript.strip():
+            return transcript, True
+        
+        return "All transcript methods failed. Please try a different video or check if captions are available.", False
+    
+    def _get_transcript_ytdlp(self, video_id: str) -> Tuple[str, bool]:
+        """Primary method using yt-dlp for subtitle extraction"""
         try:
-            # Add rate limiting to prevent IP blocking
+            url = f"https://www.youtube.com/watch?v={video_id}"
+            
+            with tempfile.TemporaryDirectory() as temp_dir:
+                ydl_opts = {
+                    'writeautomaticsub': True,
+                    'writesubtitles': True,
+                    'subtitleslangs': ['en', 'en-US', 'en-GB'],
+                    'subtitlesformat': 'vtt',
+                    'skip_download': True,
+                    'outtmpl': os.path.join(temp_dir, '%(id)s.%(ext)s'),
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extract_flat': False,
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    try:
+                        # Extract info and download subtitles
+                        info = ydl.extract_info(url, download=False)
+                        ydl.download([url])
+                        
+                        # Look for subtitle files
+                        for file in os.listdir(temp_dir):
+                            if file.endswith(('.vtt', '.srt')):
+                                file_path = os.path.join(temp_dir, file)
+                                with open(file_path, 'r', encoding='utf-8') as f:
+                                    content = f.read()
+                                    transcript = self._clean_subtitle_content(content)
+                                    if transcript.strip():
+                                        return transcript, True
+                    except Exception as e:
+                        pass
+                        
+            return "No subtitles found with yt-dlp", False
+            
+        except Exception as e:
+            return f"yt-dlp error: {str(e)}", False
+    
+    def _get_transcript_ytdlp_alternative(self, video_id: str) -> Tuple[str, bool]:
+        """Alternative yt-dlp configuration"""
+        try:
+            url = f"https://www.youtube.com/watch?v={video_id}"
+            
+            ydl_opts = {
+                'writeautomaticsub': True,
+                'subtitleslangs': ['en'],
+                'subtitlesformat': 'best',
+                'skip_download': True,
+                'quiet': True,
+                'no_warnings': True,
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                try:
+                    info = ydl.extract_info(url, download=False)
+                    
+                    # Check if subtitles are available in the info
+                    if 'subtitles' in info:
+                        for lang in ['en', 'en-US', 'en-GB']:
+                            if lang in info['subtitles']:
+                                subtitle_url = info['subtitles'][lang][0]['url']
+                                # You could fetch and parse this URL
+                                return "Subtitles available but need URL parsing", False
+                    
+                    if 'automatic_captions' in info:
+                        for lang in ['en', 'en-US', 'en-GB']:
+                            if lang in info['automatic_captions']:
+                                return "Auto captions available but need URL parsing", False
+                                
+                except Exception:
+                    pass
+                    
+            return "Alternative yt-dlp method failed", False
+            
+        except Exception as e:
+            return f"Alternative yt-dlp error: {str(e)}", False
+    
+    def _get_transcript_original_enhanced(self, video_id: str) -> Tuple[str, bool]:
+        """Enhanced original method with better rate limiting"""
+        try:
+            # Enhanced rate limiting
             current_time = time.time()
             time_since_last = current_time - self.last_request_time
-            if time_since_last < 3:  # Wait at least 3 seconds between requests
-                wait_time = 3 + random.uniform(1, 2)  # Random delay 4-5 seconds
+            if time_since_last < 5:  # Increased to 5 seconds
+                wait_time = 5 + random.uniform(2, 5)  # 7-10 second delay
                 time.sleep(wait_time)
             
             self.last_request_time = time.time()
             
-            # Try multiple language options and methods
-            language_options = [
-                ["en"],           # English only
-                ["en-US"],        # US English
-                ["en-GB"],        # UK English
-                ["en", "en-US"],  # Multiple English variants
+            # Try multiple language configurations
+            language_attempts = [
+                ["en"],
+                ["en-US"],
+                ["en-GB"],
+                ["en", "en-US", "en-GB"],
             ]
             
-            for languages in language_options:
+            for languages in language_attempts:
                 try:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
                     transcript = " ".join(chunk["text"] for chunk in transcript_list)
-                    if transcript.strip():  # Ensure we got actual content
+                    if transcript.strip():
                         return transcript, True
                 except TranscriptsDisabled:
                     continue
-                except Exception:
+                except Exception as e:
+                    if "blocked" in str(e).lower():
+                        break  # Don't continue if blocked
                     continue
             
-            # Final attempt without language specification (auto-detect)
+            # Final attempt without language specification
             try:
                 transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
                 transcript = " ".join(chunk["text"] for chunk in transcript_list)
                 return transcript, True
-            except TranscriptsDisabled:
-                return "No captions available for this video. Please try a video with captions enabled.", False
             except Exception as e:
                 error_msg = str(e)
                 if "blocked" in error_msg.lower() or "ip" in error_msg.lower():
-                    return "YouTube is temporarily blocking requests. Please wait 10-15 minutes and try again, or try a different video.", False
-                return f"Error fetching transcript: {error_msg}", False
+                    return "YouTube API temporarily blocked. Trying alternative methods...", False
+                return f"Original API error: {error_msg}", False
                 
         except Exception as e:
-            return f"Unexpected error: {str(e)}", False
+            return f"Enhanced original method error: {str(e)}", False
+    
+    def _clean_subtitle_content(self, content: str) -> str:
+        """Clean VTT/SRT subtitle content to plain text"""
+        lines = content.split('\n')
+        text_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            # Skip VTT headers, timestamps, and sequence numbers
+            if (line and 
+                not line.startswith('WEBVTT') and
+                not line.startswith('NOTE') and
+                not '-->' in line and
+                not line.isdigit() and
+                not line.startswith('<') and
+                not line.endswith('>') and
+                line != ''):
+                text_lines.append(line)
+        
+        return ' '.join(text_lines)
     
     def chunk_transcript(self, transcript: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
         """Split transcript into chunks for better processing"""
@@ -126,7 +249,7 @@ class GeminiTubeGPT:
         
         try:
             # Limit chunks to prevent token overflow
-            chunks_to_analyze = chunks[:8]  # Reduced from 10 to 8
+            chunks_to_analyze = chunks[:6]  # Further reduced for reliability
             
             relevance_prompt = f"""
             Given this question: "{question}"
@@ -141,22 +264,40 @@ class GeminiTubeGPT:
             response = self.model.generate_content(relevance_prompt)
             
             try:
-                # Clean response text (remove markdown formatting if present)
+                # Enhanced response cleaning
                 response_text = response.text.strip()
-                if response_text.startswith("```"):
-                    response_text = response_text.split("```")
-                if response_text.startswith("json"):
-                    response_text = response_text[4:]
                 
+                # Remove markdown formatting
+                if response_text.startswith("```"):
+                    parts = response_text.split("```")
+                    if len(parts) >= 2:
+                        response_text = parts[1]
+                
+                # Remove 'json' prefix if present
+                if response_text.startswith("json"):
+                    response_text = response_text[4:].strip()
+                
+                # Try to parse JSON
                 scores = json.loads(response_text)
                 if isinstance(scores, list) and len(scores) == len(chunks_to_analyze):
                     chunk_scores = list(zip(chunks_to_analyze, scores))
-                    chunk_scores.sort(key=lambda x: x, reverse=True)
+                    chunk_scores.sort(key=lambda x: x[1], reverse=True)  # Fixed sorting key
                     return [chunk for chunk, score in chunk_scores[:max_chunks]]
+                    
             except json.JSONDecodeError:
-                # Fallback: return first chunks if JSON parsing fails
-                pass
+                # Enhanced fallback: try to extract numbers from response
+                try:
+                    import re
+                    numbers = re.findall(r'\d+', response_text)
+                    if len(numbers) == len(chunks_to_analyze):
+                        scores = [int(n) for n in numbers]
+                        chunk_scores = list(zip(chunks_to_analyze, scores))
+                        chunk_scores.sort(key=lambda x: x[1], reverse=True)
+                        return [chunk for chunk, score in chunk_scores[:max_chunks]]
+                except:
+                    pass
             
+            # Final fallback: return first chunks
             return chunks_to_analyze[:max_chunks]
             
         except Exception as e:
