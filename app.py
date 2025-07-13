@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="TubeGPT - AI Video Assistant",
     page_icon="🎥",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
     menu_items={
         'Get Help': 'https://github.com/adhirajsingh/tubegpt',
         'Report a bug': "https://github.com/adhirajsingh/tubegpt/issues",
@@ -21,204 +21,467 @@ st.set_page_config(
     }
 )
 
-# Enhanced Professional CSS
+# Modern Website CSS
 st.markdown("""
 <style>
     /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Global Reset & Variables */
+    :root {
+        --primary-color: #6366f1;
+        --primary-dark: #4f46e5;
+        --secondary-color: #8b5cf6;
+        --accent-color: #06b6d4;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --background-primary: #0f172a;
+        --background-secondary: #1e293b;
+        --background-tertiary: #334155;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        --border-radius: 12px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
     
     /* Global Styles */
     .stApp {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--background-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
     }
     
     .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1200px;
+        padding: 0;
+        max-width: 100%;
     }
     
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Hide Streamlit Elements */
+    #MainMenu, footer, header, .stDeployButton {visibility: hidden;}
+    .stApp > div:first-child {margin-top: -80px;}
     
-    /* Professional Header */
-    .hero-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 2rem;
-        border-radius: 20px;
+    /* Navigation Bar */
+    .navbar {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .navbar-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+    }
+    
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+    
+    .navbar-brand .logo {
+        font-size: 2rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .navbar-nav {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+    
+    .nav-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition);
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+    }
+    
+    .nav-link:hover {
+        color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary) 100%);
+        padding: 4rem 2rem;
         text-align: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
         position: relative;
         overflow: hidden;
     }
     
-    .hero-header::before {
+    .hero-section::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        opacity: 0.1;
+        background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
     }
     
     .hero-title {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: relative;
-        z-index: 1;
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.1;
     }
     
     .hero-subtitle {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
         font-weight: 400;
-        margin-bottom: 0.5rem;
-        opacity: 0.9;
-        position: relative;
-        z-index: 1;
     }
     
-    .hero-author {
+    .hero-description {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        margin-bottom: 3rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .hero-cta {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .cta-button {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+        box-shadow: var(--shadow-lg);
+        border: none;
+        cursor: pointer;
         font-size: 1rem;
-        font-weight: 500;
-        opacity: 0.8;
-        position: relative;
-        z-index: 1;
     }
     
-    /* Modern Cards */
-    .modern-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-    }
-    
-    .modern-card:hover {
+    .cta-button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-xl);
+    }
+    
+    .cta-button.secondary {
+        background: transparent;
+        border: 2px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    .cta-button.secondary:hover {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Main Content */
+    .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 3rem;
+        margin-top: 2rem;
+    }
+    
+    /* Cards */
+    .card {
+        background: var(--background-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-color);
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .card-icon {
+        font-size: 1.5rem;
+        color: var(--primary-color);
     }
     
     /* Chat Interface */
     .chat-container {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        max-height: 600px;
+        background: var(--background-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        background: var(--background-tertiary);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .chat-messages {
+        flex: 1;
         overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
     
-    .message-user {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .message {
+        max-width: 80%;
+        padding: 1rem 1.5rem;
+        border-radius: 1.5rem;
+        position: relative;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .message.user {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
         color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 20px 20px 5px 20px;
-        margin: 0.5rem 0;
-        margin-left: 20%;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        position: relative;
-        animation: slideInRight 0.3s ease;
+        align-self: flex-end;
+        border-bottom-right-radius: 0.5rem;
     }
     
-    .message-bot {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        color: #333;
-        padding: 1rem 1.5rem;
-        border-radius: 20px 20px 20px 5px;
-        margin: 0.5rem 0;
-        margin-right: 20%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-left: 4px solid #667eea;
-        position: relative;
-        animation: slideInLeft 0.3s ease;
+    .message.bot {
+        background: var(--background-tertiary);
+        color: var(--text-primary);
+        align-self: flex-start;
+        border-bottom-left-radius: 0.5rem;
+        border-left: 3px solid var(--primary-color);
     }
     
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
     }
     
-    @keyframes slideInLeft {
-        from { transform: translateX(-100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    .message-content {
+        line-height: 1.5;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .chat-input {
+        border-top: 1px solid var(--border-color);
+        padding: 1rem;
+        background: var(--background-tertiary);
+    }
+    
+    .input-group {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+    
+    .input-field {
+        flex: 1;
+        background: var(--background-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1rem;
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: var(--transition);
+        resize: none;
+        min-height: 44px;
+        max-height: 120px;
+    }
+    
+    .input-field:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .send-button {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .send-button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
     }
     
     /* Status Cards */
     .status-card {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
         padding: 1rem;
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         margin: 1rem 0;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 500;
     }
     
-    .warning-card {
-        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    .status-card.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: var(--success-color);
     }
     
-    .info-card {
-        background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+    .status-card.warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: var(--warning-color);
     }
     
-    /* Stats Dashboard */
-    .stats-dashboard {
+    .status-card.info {
+        background: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        color: var(--accent-color);
+    }
+    
+    /* Quick Actions */
+    .quick-actions {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .quick-action {
+        background: var(--background-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        text-align: left;
+        cursor: pointer;
+        transition: var(--transition);
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .quick-action:hover {
+        background: var(--background-secondary);
+        border-color: var(--primary-color);
+        transform: translateX(4px);
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 1rem;
-        margin: 1rem 0;
+        margin: 1.5rem 0;
     }
     
     .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         color: white;
         padding: 1.5rem;
-        border-radius: 16px;
+        border-radius: var(--border-radius);
         text-align: center;
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
     }
     
     .stat-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+        box-shadow: var(--shadow-lg);
     }
     
     .stat-number {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: block;
     }
     
     .stat-label {
@@ -229,120 +492,139 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
-    /* Quick Action Buttons */
-    .quick-action-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-        margin: 1rem 0;
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 1.5rem;
     }
     
-    .quick-btn {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        border: 2px solid #e9ecef;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        text-align: left;
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
         font-weight: 500;
-        color: #495057;
+        color: var(--text-primary);
     }
     
-    .quick-btn:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .form-input {
+        width: 100%;
+        background: var(--background-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1rem;
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .form-button {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
         color: white;
-        border-color: #667eea;
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        width: 100%;
+        font-size: 1rem;
     }
     
-    /* Feature Cards */
-    .feature-grid {
+    .form-button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .form-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Features Grid */
+    .features-grid {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-        margin: 1rem 0;
+        gap: 1rem;
+        margin: 1.5rem 0;
     }
     
     .feature-item {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--background-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
         padding: 1rem;
-        border-radius: 12px;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        border-left: 4px solid var(--primary-color);
     }
     
     .feature-item:hover {
         transform: translateX(4px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-        border-left-color: #764ba2;
-    }
-    
-    /* Sidebar Styling */
-    .css-1d391kg {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-    }
-    
-    /* Input Styling */
-    .stTextInput > div > div > input {
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    /* Button Styling */
-    .stButton > button {
-        border-radius: 12px;
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        transition: all 0.3s ease;
-        border: none;
-    }
-    
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-    
-    .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        background: var(--background-secondary);
     }
     
     /* Footer */
-    .professional-footer {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 16px;
+    .footer {
+        background: var(--background-secondary);
+        border-top: 1px solid var(--border-color);
+        padding: 3rem 2rem 2rem;
         text-align: center;
-        margin-top: 3rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        margin-top: 4rem;
     }
     
-    /* Loading Animation */
-    .loading-container {
+    .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .footer-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+    
+    .footer-text {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-links {
         display: flex;
         justify-content: center;
-        align-items: center;
-        padding: 2rem;
+        gap: 2rem;
+        margin: 2rem 0;
+        flex-wrap: wrap;
     }
     
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #667eea;
+    .footer-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .footer-link:hover {
+        color: var(--primary-color);
+    }
+    
+    /* Loading States */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+    
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-top: 2px solid var(--primary-color);
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
@@ -358,14 +640,92 @@ st.markdown("""
             font-size: 2.5rem;
         }
         
-        .message-user, .message-bot {
-            margin-left: 5%;
-            margin-right: 5%;
+        .content-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
         }
         
-        .stats-dashboard {
+        .navbar-content {
+            padding: 0 1rem;
+        }
+        
+        .navbar-nav {
+            gap: 1rem;
+        }
+        
+        .hero-section {
+            padding: 2rem 1rem;
+        }
+        
+        .main-content {
+            padding: 2rem 1rem;
+        }
+        
+        .message {
+            max-width: 90%;
+        }
+        
+        .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+    }
+    
+    /* Streamlit Specific Overrides */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: var(--border-radius) !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        transition: var(--transition) !important;
+        width: 100% !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: var(--shadow-md) !important;
+    }
+    
+    .stTextInput > div > div > input {
+        background: var(--background-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+        color: var(--text-primary) !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    }
+    
+    .stSelectbox > div > div > div {
+        background: var(--background-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .stExpander {
+        background: var(--background-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+    }
+    
+    .stSidebar {
+        background: var(--background-secondary) !important;
+    }
+    
+    .stSidebar .stButton > button {
+        background: var(--background-tertiary) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .stSidebar .stButton > button:hover {
+        background: var(--background-secondary) !important;
+        border-color: var(--primary-color) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -535,18 +895,6 @@ class GeminiTubeGPT:
             return f"Error generating summary: {str(e)}"
 
 def main():
-    # Professional Hero Header
-    st.markdown("""
-    <div class="hero-header">
-        <div class="hero-title">🎥 TubeGPT</div>
-        <div class="hero-subtitle">AI-Powered YouTube Video Q&A Assistant</div>
-        <div class="hero-author">Crafted with ❤️ by Adhiraj Singh</div>
-        <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-            Powered by Google Gemini 2.0 Flash • Transform any YouTube video into an interactive knowledge base
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
     # Initialize session state
     if 'tube_gpt' not in st.session_state:
         st.session_state.tube_gpt = GeminiTubeGPT()
@@ -560,51 +908,111 @@ def main():
     if 'api_configured' not in st.session_state:
         st.session_state.api_configured = False
     
-    # Sidebar Configuration
-    with st.sidebar:
-        st.markdown("### ⚙️ Configuration")
+    # Navigation Bar
+    st.markdown("""
+    <div class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">
+                <span class="logo">🎥</span>
+                <span>TubeGPT</span>
+            </div>
+            <div class="navbar-nav">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="https://github.com/adhirajsingh/tubegpt" class="nav-link">GitHub</a>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Hero Section
+    st.markdown("""
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">TubeGPT</h1>
+            <p class="hero-subtitle">AI-Powered YouTube Video Q&A Assistant</p>
+            <p class="hero-description">
+                Transform any YouTube video into an interactive knowledge base. 
+                Ask questions, get summaries, and explore video content with the power of AI.
+            </p>
+            <div class="hero-cta">
+                <button class="cta-button" onclick="document.querySelector('.main-content').scrollIntoView()">
+                    🚀 Get Started
+                </button>
+                <button class="cta-button secondary" onclick="document.querySelector('#features').scrollIntoView()">
+                    ✨ Learn More
+                </button>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Main Content
+    st.markdown('<div class="main-content">', unsafe_allow_html=True)
+    
+    # Setup Section
+    if not st.session_state.api_configured:
+        st.markdown("""
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🔑</span>
+                <h2 class="card-title">Setup Your API Key</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                To get started, you'll need a Google Gemini API key. It's free and takes just a minute to set up.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # API Key Section
-        with st.expander("🔑 Gemini API Setup", expanded=not st.session_state.api_configured):
-            gemini_api_key = st.text_input(
-                "Enter your Gemini API Key", 
+        with st.form("api_setup"):
+            api_key = st.text_input(
+                "🔑 Enter your Gemini API Key",
                 type="password",
-                help="Get your API key from Google AI Studio",
-                placeholder="Enter your API key here..."
+                placeholder="Enter your API key here...",
+                help="Get your free API key from Google AI Studio"
             )
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🚀 Setup", type="primary", use_container_width=True):
-                    if gemini_api_key:
-                        with st.spinner("Configuring Gemini..."):
-                            if st.session_state.tube_gpt.setup_gemini(gemini_api_key):
-                                st.session_state.api_configured = True
-                                st.success("✅ Configured!")
-                                st.rerun()
-                            else:
-                                st.error("❌ Configuration failed")
-                    else:
-                        st.error("Please provide your API key")
-            
+                submitted = st.form_submit_button("🚀 Setup API", use_container_width=True)
             with col2:
-                if st.button("ℹ️ Get Key", use_container_width=True):
+                if st.form_submit_button("ℹ️ Get API Key", use_container_width=True):
                     st.info("Visit: https://makersuite.google.com/app/apikey")
-        
-        st.divider()
-        
-        # Video Input Section
-        with st.expander("📹 Load Video", expanded=st.session_state.api_configured and not st.session_state.video_loaded):
-            video_input = st.text_input(
-                "YouTube URL or Video ID",
-                placeholder="https://youtube.com/watch?v=... or video_id",
-                help="Enter a YouTube URL or just the video ID"
-            )
             
-            if st.button("📥 Load Video", type="primary", disabled=not st.session_state.api_configured, use_container_width=True):
-                if not st.session_state.api_configured:
-                    st.error("Please configure Gemini API first")
-                elif video_input:
+            if submitted and api_key:
+                with st.spinner("Configuring Gemini..."):
+                    if st.session_state.tube_gpt.setup_gemini(api_key):
+                        st.session_state.api_configured = True
+                        st.success("✅ API configured successfully!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to configure API. Please check your key.")
+    
+    else:
+        # Video Loading Section
+        if not st.session_state.video_loaded:
+            st.markdown("""
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📹</span>
+                    <h2 class="card-title">Load a YouTube Video</h2>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Enter any YouTube URL or video ID to start analyzing the video content.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.form("video_load"):
+                video_input = st.text_input(
+                    "📹 YouTube URL or Video ID",
+                    placeholder="https://youtube.com/watch?v=... or video_id",
+                    help="Paste a YouTube URL or just the video ID"
+                )
+                
+                submitted = st.form_submit_button("📥 Load Video", use_container_width=True)
+                
+                if submitted and video_input:
                     video_id = st.session_state.tube_gpt.extract_video_id(video_input)
                     if video_id:
                         with st.spinner("🔄 Fetching transcript..."):
@@ -624,126 +1032,117 @@ def main():
                                 st.error(f"❌ {transcript}")
                     else:
                         st.error("❌ Invalid YouTube URL or Video ID")
-                else:
-                    st.error("Please enter a YouTube URL or Video ID")
         
-        # Video Stats
-        if st.session_state.video_loaded:
-            st.divider()
-            st.markdown("### 📊 Video Analytics")
+        else:
+            # Main Application Interface
+            st.markdown(f"""
+            <div class="status-card success">
+                <span>🎬</span>
+                <div>
+                    <strong>Video Loaded: {st.session_state.tube_gpt.video_id}</strong><br>
+                    <small>Ready for questions! Ask anything about the video content.</small>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
+            # Stats
             transcript_length = len(st.session_state.tube_gpt.transcript)
             chunk_count = len(st.session_state.tube_gpt.chunks)
             word_count = len(st.session_state.tube_gpt.transcript.split())
             
             st.markdown(f"""
-            <div class="stats-dashboard">
+            <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number">{chunk_count}</div>
-                    <div class="stat-label">Chunks</div>
+                    <span class="stat-number">{chunk_count}</span>
+                    <span class="stat-label">Chunks</span>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{word_count:,}</div>
-                    <div class="stat-label">Words</div>
+                    <span class="stat-number">{word_count:,}</span>
+                    <span class="stat-label">Words</span>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{transcript_length//1000}K</div>
-                    <div class="stat-label">Characters</div>
+                    <span class="stat-number">{transcript_length//1000}K</span>
+                    <span class="stat-label">Characters</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.info(f"🎬 **Video ID:** `{st.session_state.tube_gpt.video_id}`")
-        
-        # Controls
-        if st.session_state.video_loaded:
-            st.divider()
-            st.markdown("### 🎛️ Controls")
+            # Content Grid
+            st.markdown('<div class="content-grid">', unsafe_allow_html=True)
             
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🗑️ Clear", use_container_width=True):
-                    st.session_state.chat_history = []
-                    st.rerun()
-            
-            with col2:
-                if st.button("📋 Summary", use_container_width=True):
-                    with st.spinner("Generating summary..."):
-                        summary = st.session_state.tube_gpt.generate_summary()
-                        st.session_state.chat_history.append(("Generate a summary of this video", summary))
-                        st.rerun()
-    
-    # Main Content Area
-    col1, col2 = st.columns([2.5, 1])
-    
-    with col1:
-        st.markdown("### 💬 Chat with Video")
-        
-        # Status Display
-        if not st.session_state.api_configured:
+            # Chat Section
             st.markdown("""
-            <div class="warning-card">
-                <strong>⚠️ Setup Required</strong><br>
-                Please configure your Gemini API key in the sidebar to get started.
-            </div>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span style="font-size: 1.5rem;">💬</span>
+                    <div>
+                        <strong>Chat with Video</strong>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Ask questions about the video content</div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
             """, unsafe_allow_html=True)
-        elif not st.session_state.video_loaded:
-            st.markdown("""
-            <div class="info-card">
-                <strong>ℹ️ Ready to Load</strong><br>
-                Load a YouTube video to start asking questions about its content.
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="status-card">
-                <strong>🎬 Video Loaded: {st.session_state.tube_gpt.video_id}</strong><br>
-                Ready for questions! Ask anything about the video content.
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Chat Interface
-        chat_container = st.container()
-        
-        with chat_container:
+            
+            # Display chat history
             if st.session_state.chat_history:
-                st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-                for i, (question, answer) in enumerate(st.session_state.chat_history):
+                for question, answer in st.session_state.chat_history:
                     st.markdown(f"""
-                    <div class="message-user">
-                        <strong>🙋 You:</strong> {question}
+                    <div class="message user">
+                        <div class="message-header">
+                            <span>🙋</span>
+                            <span>You</span>
+                        </div>
+                        <div class="message-content">{question}</div>
+                    </div>
+                    <div class="message bot">
+                        <div class="message-header">
+                            <span>🤖</span>
+                            <span>TubeGPT</span>
+                        </div>
+                        <div class="message-content">{answer}</div>
                     </div>
                     """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"""
-                    <div class="message-bot">
-                        <strong>🤖 TubeGPT:</strong> {answer}
-                    </div>
-                    """, unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Question Input
-        if st.session_state.video_loaded and st.session_state.api_configured:
-            st.markdown("---")
-            with st.form("question_form", clear_on_submit=True):
+            else:
+                st.markdown("""
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    <span style="font-size: 3rem;">💬</span>
+                    <p>Start a conversation about the video!</p>
+                    <p style="font-size: 0.9rem;">Ask questions, request summaries, or explore the content.</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Chat Input
+            with st.form("chat_form", clear_on_submit=True):
+                st.markdown('<div class="chat-input">', unsafe_allow_html=True)
                 question = st.text_input(
-                    "💭 Ask a question about the video:",
+                    "💭 Ask a question about the video",
                     placeholder="What is this video about?",
-                    help="Ask anything about the video content - main topics, speakers, key points, etc."
+                    label_visibility="collapsed"
                 )
-                
-                submitted = st.form_submit_button("🚀 Send Message", type="primary", use_container_width=True)
+                submitted = st.form_submit_button("🚀 Send", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
                 
                 if submitted and question:
                     with st.spinner("🤔 Thinking..."):
                         answer = st.session_state.tube_gpt.answer_question(question)
                         st.session_state.chat_history.append((question, answer))
                         st.rerun()
-    
-    with col2:
-        st.markdown("### ⚡ Quick Actions")
-        
-        if st.session_state.video_loaded and st.session_state.api_configured:
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Sidebar Content
+            st.markdown("""
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+            """, unsafe_allow_html=True)
+            
             quick_questions = [
                 "📝 Summarize this video",
                 "🎯 What are the main topics?",
@@ -757,52 +1156,140 @@ def main():
                 "🔗 Any recommendations?"
             ]
             
-            st.markdown('<div class="quick-action-grid">', unsafe_allow_html=True)
-            for q in quick_questions:
-                if st.button(q, key=f"quick_{hash(q)}", help=f"Ask: {q[2:]}"):
+            for i, q in enumerate(quick_questions):
+                if st.button(q, key=f"quick_{i}"):
                     with st.spinner("🤔 Processing..."):
                         answer = st.session_state.tube_gpt.answer_question(q[2:])
                         st.session_state.chat_history.append((q[2:], answer))
                         st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        else:
+            
+            st.markdown('</div></div>', unsafe_allow_html=True)
+            
+            # Controls
             st.markdown("""
-            <div class="modern-card">
-                <p style="text-align: center; color: #666; margin: 0;">
-                    Configure API and load a video to see quick actions
+            <div class="card" style="margin-top: 1rem;">
+                <div class="card-header">
+                    <span class="card-icon">🎛️</span>
+                    <h3 class="card-title">Controls</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🗑️ Clear Chat", use_container_width=True):
+                    st.session_state.chat_history = []
+                    st.rerun()
+            
+            with col2:
+                if st.button("📋 Generate Summary", use_container_width=True):
+                    with st.spinner("Generating summary..."):
+                        summary = st.session_state.tube_gpt.generate_summary()
+                        st.session_state.chat_history.append(("Generate a summary of this video", summary))
+                        st.rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)  # Close content-grid
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close main-content
+    
+    # Features Section
+    st.markdown("""
+    <div id="features" class="main-content">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">✨ Features</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+                Discover what makes TubeGPT the ultimate YouTube video analysis tool
+            </p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🎥</span>
+                    <h3 class="card-title">YouTube Integration</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Load any YouTube video with captions instantly. Support for all major video formats and languages.
                 </p>
             </div>
-            """, unsafe_allow_html=True)
-        
-        # Features Section
-        st.markdown("### ✨ Features")
-        features = [
-            "🎥 **YouTube Integration**: Load any video with captions",
-            "🧠 **Google Gemini 2.0**: Latest AI model for intelligent responses", 
-            "🔍 **Smart Chunking**: Intelligent text processing for better context",
-            "💬 **Natural Chat**: Conversational interface for easy interaction",
-            "⚡ **Quick Questions**: Pre-built queries for common needs",
-            "📊 **Video Analytics**: Statistics about loaded content",
-            "🎯 **Contextual Answers**: Responses based only on video content"
-        ]
-        
-        st.markdown('<div class="feature-grid">', unsafe_allow_html=True)
-        for feature in features:
-            st.markdown(f'<div class="feature-item">{feature}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🧠</span>
+                    <h3 class="card-title">Google Gemini 2.0</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Powered by the latest Google Gemini 2.0 Flash model for intelligent, context-aware responses.
+                </p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🔍</span>
+                    <h3 class="card-title">Smart Chunking</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Intelligent text processing that breaks down video content for better context understanding.
+                </p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">💬</span>
+                    <h3 class="card-title">Natural Chat</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Conversational interface that feels natural and intuitive for exploring video content.
+                </p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚡</span>
+                    <h3 class="card-title">Quick Questions</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Pre-built queries for common needs like summaries, key points, and speaker identification.
+                </p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h3 class="card-title">Video Analytics</h3>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    Detailed statistics about video content including word count, chunks, and processing metrics.
+                </p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Professional Footer
+    # Footer
     st.markdown("""
-    <div class="professional-footer">
-        <h3 style="margin-bottom: 1rem;">🎥 TubeGPT</h3>
-        <p style="margin-bottom: 0.5rem;">AI-Powered YouTube Video Q&A Assistant</p>
-        <p style="margin-bottom: 0.5rem;">Built with ❤️ by <strong>Adhiraj Singh</strong></p>
-        <p style="margin-bottom: 0; opacity: 0.8; font-size: 0.9rem;">
-            Powered by Google Gemini 2.0 Flash • Transform any YouTube video into an interactive knowledge base
-        </p>
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
-            <small>© 2024 TubeGPT. Made with Streamlit & Google Gemini.</small>
+    <div class="footer">
+        <div class="footer-content">
+            <h3 class="footer-title">🎥 TubeGPT</h3>
+            <p class="footer-text">AI-Powered YouTube Video Q&A Assistant</p>
+            <p class="footer-text">Built with ❤️ by <strong>Adhiraj Singh</strong></p>
+            
+            <div class="footer-links">
+                <a href="https://github.com/adhirajsingh/tubegpt" class="footer-link">GitHub</a>
+                <a href="#" class="footer-link">Documentation</a>
+                <a href="#" class="footer-link">Support</a>
+                <a href="#" class="footer-link">Privacy</a>
+            </div>
+            
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Powered by Google Gemini 2.0 Flash • Transform any YouTube video into an interactive knowledge base
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">
+                    © 2025 TubeGPT. Made with Streamlit & Google Gemini.
+                </p>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
