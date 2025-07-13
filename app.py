@@ -24,12 +24,12 @@ except ImportError as e:
     st.info("Please ensure all component files are properly installed.")
     st.stop()
 
-# Page configuration with light theme
+# Page configuration with custom title
 st.set_page_config(
     page_title="TubeGPT - AI Video Assistant",
     page_icon="🎥",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",  # Collapsed for full screen
     menu_items={
         'Get Help': 'https://github.com/adhirajsingh/tubegpt',
         'Report a bug': "https://github.com/adhirajsingh/tubegpt/issues",
@@ -60,13 +60,13 @@ def main():
         # Initialize session state
         initialize_session_state()
         
-        # Apply light theme styling
+        # Apply light theme and full screen styling
         UIComponents.apply_light_theme()
         
-        # Render navigation using Streamlit components
-        UIComponents.render_streamlit_navigation()
+        # Render navigation (this will handle page switching)
+        UIComponents.render_navigation()
         
-        # Main content routing
+        # Render content based on current page
         if st.session_state.current_page == 'home':
             render_home_page()
         elif st.session_state.current_page == 'dashboard':
@@ -80,7 +80,7 @@ def main():
         st.error(f"Application error: {str(e)}")
 
 def render_home_page():
-    """Render the home/landing page using Streamlit components"""
+    """Render the home/landing page"""
     UIComponents.render_hero_streamlit()
     UIComponents.render_features_streamlit()
     UIComponents.render_footer_streamlit()
@@ -95,12 +95,12 @@ def render_dashboard():
         render_main_interface()
 
 def render_main_interface():
-    """Render the main chat interface"""
+    """Render the main chat interface with full screen layout"""
     # Status indicator
     UIComponents.render_status_indicator()
     
-    # Main content layout
-    col1, col2 = st.columns([2.5, 1], gap="large")
+    # Full screen main content layout
+    col1, col2 = st.columns([3, 1], gap="large")  # Adjusted ratio for better space usage
     
     with col1:
         ChatComponent.render_chat_interface()

@@ -4,10 +4,36 @@ from utils.constants import APP_CONFIG
 class UIComponents:
     @staticmethod
     def apply_light_theme():
-        """Apply light theme styling using Streamlit's theming"""
+        """Apply light theme styling with custom app title"""
         st.markdown("""
         <style>
-            /* Light theme overrides */
+            /* Hide Streamlit branding and set custom title */
+            .stApp > header {display: none;}
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stDeployButton {display: none;}
+            
+            /* Custom app title */
+            .main-title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: #1f2937;
+                text-align: center;
+                margin-bottom: 0.5rem;
+                background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            
+            .main-subtitle {
+                text-align: center;
+                color: #6b7280;
+                margin-bottom: 2rem;
+                font-style: italic;
+            }
+            
+            /* Light theme styling */
             .stApp {
                 background-color: #ffffff;
                 color: #1f2937;
@@ -20,6 +46,7 @@ class UIComponents:
                 border-radius: 8px;
                 font-weight: 600;
                 transition: all 0.3s ease;
+                height: 3rem;
             }
             
             .stButton > button:hover {
@@ -27,70 +54,97 @@ class UIComponents:
                 box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
             }
             
-            .stSelectbox > div > div {
-                background-color: #f8fafc;
-                border: 1px solid #e2e8f0;
+            /* Quick action buttons styling */
+            .quick-action-btn {
+                margin: 0.25rem 0;
+                height: 2.5rem;
             }
             
+            /* Full width container */
+            .main .block-container {
+                padding-top: 1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                max-width: 100%;
+            }
+            
+            /* Tab styling */
+            .stTabs [data-baseweb="tab-list"] {
+                gap: 2rem;
+                background-color: #f8fafc;
+                padding: 0.5rem;
+                border-radius: 10px;
+                margin-bottom: 2rem;
+            }
+            
+            .stTabs [data-baseweb="tab"] {
+                height: 3rem;
+                padding: 0.5rem 1.5rem;
+                background-color: transparent;
+                border-radius: 8px;
+                color: #6b7280;
+                font-weight: 600;
+            }
+            
+            .stTabs [aria-selected="true"] {
+                background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+                color: white;
+            }
+            
+            /* Input styling */
             .stTextInput > div > div > input {
                 background-color: #f8fafc;
                 border: 1px solid #e2e8f0;
                 border-radius: 8px;
+                height: 3rem;
             }
             
             .stTextInput > div > div > input:focus {
                 border-color: #3b82f6;
                 box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }
-            
-            /* Hide default Streamlit elements */
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            .stDeployButton {visibility: hidden;}
         </style>
         """, unsafe_allow_html=True)
     
     @staticmethod
-    def render_streamlit_navigation():
-        """Render navigation using Streamlit components"""
-        # App header
-        st.markdown("# 🎥 TubeGPT")
-        st.markdown("*AI-Powered YouTube Video Q&A Assistant*")
+    def render_app_header():
+        """Render custom app header"""
+        st.markdown('<h1 class="main-title">🎥 TubeGPT</h1>', unsafe_allow_html=True)
+        st.markdown('<p class="main-subtitle">AI-Powered YouTube Video Q&A Assistant by Adhiraj Singh</p>', unsafe_allow_html=True)
+    
+    @staticmethod
+    def render_navigation():
+        """Render functional navigation tabs"""
+        UIComponents.render_app_header()
         
-        # Navigation tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["🏠 Home", "📊 Dashboard", "📈 Analytics", "⚙️ Settings"])
+        # Create tabs that actually work for navigation
+        home_tab, dashboard_tab, analytics_tab, settings_tab = st.tabs([
+            "🏠 Home", 
+            "📊 Dashboard", 
+            "📈 Analytics", 
+            "⚙️ Settings"
+        ])
         
-        with tab1:
-            if st.button("Go to Home", key="nav_home", use_container_width=True):
-                st.session_state.current_page = 'home'
-                st.rerun()
+        with home_tab:
+            st.session_state.current_page = 'home'
         
-        with tab2:
-            if st.button("Go to Dashboard", key="nav_dashboard", use_container_width=True):
-                st.session_state.current_page = 'dashboard'
-                st.rerun()
+        with dashboard_tab:
+            st.session_state.current_page = 'dashboard'
         
-        with tab3:
-            if st.button("Go to Analytics", key="nav_analytics", use_container_width=True):
-                st.session_state.current_page = 'analytics'
-                st.rerun()
+        with analytics_tab:
+            st.session_state.current_page = 'analytics'
         
-        with tab4:
-            if st.button("Go to Settings", key="nav_settings", use_container_width=True):
-                st.session_state.current_page = 'settings'
-                st.rerun()
-        
-        st.divider()
+        with settings_tab:
+            st.session_state.current_page = 'settings'
     
     @staticmethod
     def render_hero_streamlit():
         """Render hero section using Streamlit components"""
-        # Hero section
+        st.markdown("## 🚀 Transform YouTube Videos into Interactive Knowledge")
+        
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            st.markdown("## 🚀 Transform YouTube Videos into Interactive Knowledge")
             st.markdown("""
             **TubeGPT** uses Google Gemini AI to help you chat with any YouTube video, 
             get instant summaries, and explore content like never before.
@@ -110,41 +164,35 @@ class UIComponents:
     
     @staticmethod
     def render_features_streamlit():
-        """Render features section using Streamlit components"""
+        """Render features section"""
         st.markdown("## ✨ Powerful Features")
         
-        # Features grid
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            with st.container():
-                st.markdown("### 🎥 YouTube Integration")
-                st.write("Load any YouTube video instantly with automatic transcript extraction.")
-                
-                st.markdown("### 💬 Interactive Chat")
-                st.write("Natural conversation interface for exploring video content.")
+            st.markdown("### 🎥 YouTube Integration")
+            st.write("Load any YouTube video instantly with automatic transcript extraction.")
+            
+            st.markdown("### 💬 Interactive Chat")
+            st.write("Natural conversation interface for exploring video content.")
         
         with col2:
-            with st.container():
-                st.markdown("### 🧠 AI-Powered Analysis")
-                st.write("Powered by Google Gemini 2.0 for intelligent responses.")
-                
-                st.markdown("### ⚡ Quick Actions")
-                st.write("Pre-built queries for summaries and key insights.")
+            st.markdown("### 🧠 AI-Powered Analysis")
+            st.write("Powered by Google Gemini 2.0 for intelligent responses.")
+            
+            st.markdown("### ⚡ Quick Actions")
+            st.write("Pre-built queries for summaries and key insights.")
         
         with col3:
-            with st.container():
-                st.markdown("### 📊 Smart Analytics")
-                st.write("Detailed insights about video content and metrics.")
-                
-                st.markdown("### 🔍 Smart Search")
-                st.write("Advanced semantic search through video content.")
-        
-        st.divider()
+            st.markdown("### 📊 Smart Analytics")
+            st.write("Detailed insights about video content and metrics.")
+            
+            st.markdown("### 🔍 Smart Search")
+            st.write("Advanced semantic search through video content.")
     
     @staticmethod
     def render_footer_streamlit():
-        """Render footer using Streamlit components"""
+        """Render footer"""
         st.markdown("---")
         
         col1, col2, col3 = st.columns(3)
