@@ -3,23 +3,20 @@ import streamlit as st
 class VideoComponent:
     @staticmethod
     def render_video_loader():
-        """Render video loading interface using Streamlit components"""
-        st.markdown("## 📹 Load a YouTube Video")
+        """Render video loading interface"""
+        st.info("💡 Enter any YouTube URL or video ID to start analyzing the video content.")
         
-        with st.container():
-            st.info("💡 Enter any YouTube URL or video ID to start analyzing the video content.")
+        with st.form("video_load_form", clear_on_submit=False):
+            video_input = st.text_input(
+                "YouTube URL or Video ID",
+                placeholder="https://youtube.com/watch?v=... or video_id",
+                help="Paste a YouTube URL or just the video ID"
+            )
             
-            with st.form("video_load", clear_on_submit=False):
-                video_input = st.text_input(
-                    "YouTube URL or Video ID",
-                    placeholder="https://youtube.com/watch?v=... or video_id",
-                    help="Paste a YouTube URL or just the video ID"
-                )
-                
-                submitted = st.form_submit_button("📥 Load Video", type="primary", use_container_width=True)
-                
-                if submitted and video_input:
-                    VideoComponent._process_video(video_input)
+            submitted = st.form_submit_button("📥 Load Video", type="primary", use_container_width=True)
+            
+            if submitted and video_input:
+                VideoComponent._process_video(video_input)
     
     @staticmethod
     def _process_video(video_input):

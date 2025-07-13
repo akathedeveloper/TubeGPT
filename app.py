@@ -24,12 +24,12 @@ except ImportError as e:
     st.info("Please ensure all component files are properly installed.")
     st.stop()
 
-# Page configuration with custom title
+# Page configuration
 st.set_page_config(
     page_title="TubeGPT - AI Video Assistant",
     page_icon="🎥",
     layout="wide",
-    initial_sidebar_state="collapsed",  # Collapsed for full screen
+    initial_sidebar_state="collapsed",
     menu_items={
         'Get Help': 'https://github.com/adhirajsingh/tubegpt',
         'Report a bug': "https://github.com/adhirajsingh/tubegpt/issues",
@@ -51,8 +51,8 @@ def initialize_session_state():
     if 'api_configured' not in st.session_state:
         st.session_state.api_configured = False
     
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'home'
+    if 'active_tab' not in st.session_state:
+        st.session_state.active_tab = 0
 
 def main():
     """Main application entry point"""
@@ -60,24 +60,28 @@ def main():
         # Initialize session state
         initialize_session_state()
         
-        # Apply light theme and full screen styling
+        # Apply light theme
         UIComponents.apply_light_theme()
         
-        # Render navigation (this will handle page switching)
-        UIComponents.render_navigation()
+        # Render app header
+        UIComponents.render_app_header()
         
-        # Render content based on current page
-        if st.session_state.current_page == 'home':
+        # Navigation tabs (removed Settings)
+        tab1, tab2, tab3 = st.tabs(["🏠 Home", "📊 Dashboard", "📈 Analytics"])
+        
+        with tab1:
             render_home_page()
-        elif st.session_state.current_page == 'dashboard':
+        
+        with tab2:
             render_dashboard()
-        elif st.session_state.current_page == 'analytics':
+        
+        with tab3:
             render_analytics_page()
-        elif st.session_state.current_page == 'settings':
-            render_settings_page()
         
     except Exception as e:
         st.error(f"Application error: {str(e)}")
+        if st.checkbox("Show debug info"):
+            st.exception(e)
 
 def render_home_page():
     """Render the home/landing page"""
@@ -88,19 +92,21 @@ def render_home_page():
 def render_dashboard():
     """Render the main dashboard"""
     if not st.session_state.api_configured:
+        st.markdown("## 🔑 Setup Required")
         AuthComponent.render_api_setup()
     elif not st.session_state.video_loaded:
+        st.markdown("## 📹 Load Video")
         VideoComponent.render_video_loader()
     else:
         render_main_interface()
 
 def render_main_interface():
-    """Render the main chat interface with full screen layout"""
+    """Render the main chat interface"""
     # Status indicator
     UIComponents.render_status_indicator()
     
-    # Full screen main content layout
-    col1, col2 = st.columns([3, 1], gap="large")  # Adjusted ratio for better space usage
+    # Main content layout
+    col1, col2 = st.columns([3, 1], gap="large")
     
     with col1:
         ChatComponent.render_chat_interface()
@@ -119,17 +125,12 @@ def render_sidebar_content():
 
 def render_analytics_page():
     """Render analytics page"""
-    st.title("📊 Analytics Dashboard")
+    st.markdown("## 📊 Analytics Dashboard")
     
     if st.session_state.video_loaded:
         AnalyticsComponent.render_detailed_analytics()
     else:
         st.info("💡 Load a video to see detailed analytics")
-
-def render_settings_page():
-    """Render settings page"""
-    st.title("⚙️ Settings")
-    AuthComponent.render_settings()
 
 if __name__ == "__main__":
     main()

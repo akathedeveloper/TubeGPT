@@ -1,37 +1,15 @@
 import streamlit as st
-from utils.constants import APP_CONFIG
 
 class UIComponents:
     @staticmethod
     def apply_light_theme():
-        """Apply light theme styling with custom app title"""
+        """Apply light theme styling"""
         st.markdown("""
         <style>
-            /* Hide Streamlit branding and set custom title */
-            .stApp > header {display: none;}
+            /* Hide Streamlit branding */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display: none;}
-            
-            /* Custom app title */
-            .main-title {
-                font-size: 2.5rem;
-                font-weight: 700;
-                color: #1f2937;
-                text-align: center;
-                margin-bottom: 0.5rem;
-                background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-            
-            .main-subtitle {
-                text-align: center;
-                color: #6b7280;
-                margin-bottom: 2rem;
-                font-style: italic;
-            }
             
             /* Light theme styling */
             .stApp {
@@ -52,12 +30,6 @@ class UIComponents:
             .stButton > button:hover {
                 transform: translateY(-1px);
                 box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            }
-            
-            /* Quick action buttons styling */
-            .quick-action-btn {
-                margin: 0.25rem 0;
-                height: 2.5rem;
             }
             
             /* Full width container */
@@ -109,37 +81,18 @@ class UIComponents:
     @staticmethod
     def render_app_header():
         """Render custom app header"""
-        st.markdown('<h1 class="main-title">🎥 TubeGPT</h1>', unsafe_allow_html=True)
-        st.markdown('<p class="main-subtitle">AI-Powered YouTube Video Q&A Assistant by Adhiraj Singh</p>', unsafe_allow_html=True)
-    
-    @staticmethod
-    def render_navigation():
-        """Render functional navigation tabs"""
-        UIComponents.render_app_header()
-        
-        # Create tabs that actually work for navigation
-        home_tab, dashboard_tab, analytics_tab, settings_tab = st.tabs([
-            "🏠 Home", 
-            "📊 Dashboard", 
-            "📈 Analytics", 
-            "⚙️ Settings"
-        ])
-        
-        with home_tab:
-            st.session_state.current_page = 'home'
-        
-        with dashboard_tab:
-            st.session_state.current_page = 'dashboard'
-        
-        with analytics_tab:
-            st.session_state.current_page = 'analytics'
-        
-        with settings_tab:
-            st.session_state.current_page = 'settings'
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem; background: linear-gradient(90deg, #3b82f6, #1d4ed8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                🎥 TubeGPT
+            </h1>
+            <p style="color: #6b7280; font-style: italic;">AI-Powered YouTube Video Q&A Assistant by Adhiraj Singh</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     @staticmethod
     def render_hero_streamlit():
-        """Render hero section using Streamlit components"""
+        """Render hero section"""
         st.markdown("## 🚀 Transform YouTube Videos into Interactive Knowledge")
         
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -152,12 +105,10 @@ class UIComponents:
             
             col_a, col_b = st.columns(2)
             with col_a:
-                if st.button("🚀 Get Started", type="primary", use_container_width=True):
-                    st.session_state.current_page = 'dashboard'
-                    st.rerun()
+                st.button("🚀 Get Started", type="primary", use_container_width=True, key="hero_start")
             
             with col_b:
-                if st.button("📹 Learn More", use_container_width=True):
+                if st.button("📹 Learn More", use_container_width=True, key="hero_learn"):
                     st.info("TubeGPT helps you understand video content through AI-powered conversations!")
         
         st.divider()
@@ -229,12 +180,12 @@ class UIComponents:
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🗑️ Clear Chat", use_container_width=True):
+                if st.button("🗑️ Clear Chat", use_container_width=True, key="clear_chat"):
                     st.session_state.chat_history = []
                     st.rerun()
             
             with col2:
-                if st.button("🔄 New Video", use_container_width=True):
+                if st.button("🔄 New Video", use_container_width=True, key="new_video"):
                     st.session_state.video_loaded = False
                     st.session_state.chat_history = []
                     st.rerun()
